@@ -39,7 +39,7 @@ int score = 0;
 bool gameOver = false;
 
 void setup() {
-  // SNES setup
+  // SNES controller setup
   Serial.begin(115200);
 	snes.begin();
 
@@ -47,7 +47,6 @@ void setup() {
 		Serial.println("Classic Controller not detected!");
 		delay(1000);
 	}
-
   tft.begin();
   tft.fillScreen(0x0000); // Black background
   drawHUD();
@@ -65,11 +64,21 @@ void loop() {
 		delay(1000);
 		snes.connect();
 	}
+  
   boolean aButton = snes.buttonA();
+  boolean bButton = snes.buttonB();
+
+  boolean startButton = snes.buttonStart();
+
+  // D-pad
+  boolean padUp = snes.dpadUp();
+  boolean padDown = snes.dpadDown();
+  boolean padLeft = snes.dpadLeft();
+  boolean padRight = snes.dpadRight();
 
   // game loop
   if (gameOver) {
-    if (aButton == true) {
+    if (startButton == true) {
       resetGame();
       delay(200);
     }
@@ -81,6 +90,11 @@ void loop() {
   if (aButton == true && !isJumping) {
     isJumping = true;
     jumpVelocity = -10.0;
+  }
+
+  // Handle slam-down
+  if (bButton == true && isJumping) {
+    jumpVelocity = 5.0;
   }
 
   // Update Player Position
@@ -147,13 +161,13 @@ void triggerGameOver() {
   tft.fillScreen(0x0000);
   tft.setCursor(15, 50);
   tft.setTextColor(0xF800);
-  tft.setTextSize(2);
+  tft.setTextSize(1);
   tft.print(F("You Died"));
   
   tft.setCursor(20, 80);
   tft.setTextColor(0xFFE0);
   tft.setTextSize(1);
-  tft.print(F("Try again"));
+  tft.print(F("Press start to try again"));
 
   tft.setCursor(30, 100);
   tft.setTextColor(0xFFFF);
