@@ -1,6 +1,9 @@
 #include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1351.h>
+#include <NintendoExtensionCtrl.h>
+
+SNESMiniController snes;
 
 #define SCREEN_WIDTH  128
 #define SCREEN_HEIGHT 128
@@ -36,23 +39,46 @@ int score = 0;
 bool gameOver = false;
 
 void setup() {
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  // SNES setup
+  Serial.begin(115200);
+	snes.begin();
+
+	while (!snes.connect()) {
+		Serial.println("Classic Controller not detected!");
+		delay(1000);
+	}
+
   tft.begin();
   tft.fillScreen(0x0000); // Black background
   drawHUD();
 }
 
 void loop() {
+  // SNES loop
+  boolean success = snes.update();  // Get new data from the controller
+
+	if (success == true) {  // We've got data!
+		snes.printDebug();  // Print all of the values!
+	}
+	else {  // Data is bad :(
+		Serial.println("Controller Disconnected!");
+		delay(1000);
+		snes.connect();
+	}
+  boolean aButton = snes.buttonA();
+
+  // game loop
   if (gameOver) {
-    if (digitalRead(BUTTON_PIN) == LOW) {
+    if (aButton == true) {
       resetGame();
       delay(200);
     }
     return;
   }
 
+
   // Handle Button Jump
-  if (digitalRead(BUTTON_PIN) == LOW && !isJumping) {
+  if (aButton == true && !isJumping) {
     isJumping = true;
     jumpVelocity = -10.0;
   }
