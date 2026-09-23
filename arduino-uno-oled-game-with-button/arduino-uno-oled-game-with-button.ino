@@ -5,7 +5,7 @@
 
 SNESMiniController snes;
 
-#define SCREEN_WIDTH  128
+#define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 128
 
 // Colors
@@ -13,8 +13,10 @@ SNESMiniController snes;
 #define PINK 0xF8FF
 #define DARKCYAN 0x03EF
 #define MAROON 0x7800
+#define ORANGE 0xFDA0
 #define RED 0xF800
 #define BLACK 0x0000
+#define WHITE 0xFFFF
 
 const unsigned short backgroundColor = DARKGREEN;
 const unsigned short playerColor = DARKCYAN;
@@ -35,6 +37,7 @@ Adafruit_SSD1351 tft = Adafruit_SSD1351(SCREEN_WIDTH, SCREEN_HEIGHT, &SPI, CS_PI
 
 // Game variables
 int groundPositionY = 96;
+int defaultPlayerHeight = 20;
 
 struct Player { 
   int positionX;
@@ -43,12 +46,12 @@ struct Player {
   int height;
   uint8_t color;
   bool isJumping;
-} player = {.positionX = 20, .positionY = 96 - 30, .width = 20, .height = 30, .color = playerColor, .isJumping = false };
+} player = {.positionX = 20, .positionY = 96 - defaultPlayerHeight, .width = 10, .height = defaultPlayerHeight, .color = playerColor, .isJumping = false };
 
 struct Physics {
   float jumpVelocity;
   float gravity;
-} physics = {.jumpVelocity = 0, .gravity = 1.2 };
+} physics = { .jumpVelocity = 0, .gravity = 1.2 };
 
 struct Enemy {
   int positionX;
@@ -56,13 +59,22 @@ struct Enemy {
   int width;
   int height;
   int speed;
-} enemy = { .positionX = 128, .positionY = groundPositionY -20 - 1, .width = 20, .height = 20, .speed = 4 };
+  int clock;
+} enemy = { .positionX = 128, .positionY = groundPositionY -10 - 1, .width = 10, .height = 10, .speed = 4, .clock = 0 };
 
 bool gameOver = false;
 
 void drawHUD() {
-  // Ground line
-  tft.drawFastHLine(0, groundPositionY, 128, 0xFFFF); 
+  if (!gameOver) {
+    // Ground line
+    tft.drawFastHLine(0, groundPositionY, SCREEN_WIDTH, WHITE);
+    tft.fillRect(0, groundPositionY, SCREEN_WIDTH, 32, BLACK);
+  }
+
+  // tft.setCursor(15, 20);
+  // tft.setTextColor(WHITE);
+  // tft.setTextSize(1);
+  // tft.print(enemy.clock);
 }
 
 void setup() {
@@ -78,7 +90,13 @@ void setup() {
   tft.fillScreen(DARKGREEN); 
 }
 
+void clearPlayerPreviousFrame () {
+  tft.fillRect(player.positionX, player.positionY, player.width, player.height, backgroundColor);
+}
+
 void loop() {
+  drawHUD();
+
   // SNES loop
   boolean success = snes.update();  // Get new data from the controller
 
@@ -117,6 +135,24 @@ void loop() {
     physics.jumpVelocity = -10.0;
   }
 
+  int playerSpeed = 2;
+
+  // Handle movement
+  if (padRight == true) {
+    clearPlayerPreviousFrame();
+    if (bButton == true) {
+      playerSpeed = playerSpeed * 3;
+    }
+    player.positionX = player.positionX + playerSpeed;
+  }
+  if (padLeft == true) {
+    clearPlayerPreviousFrame();
+    if (bButton == true) {
+      playerSpeed = playerSpeed * 3;
+    }
+    player.positionX = player.positionX - playerSpeed;
+  }
+
   // Update Player Position
   if (player.isJumping) {
     // Clear previous player frame
@@ -132,7 +168,10 @@ void loop() {
 
   // Update enemy position
   tft.fillRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, backgroundColor); // Clear old obstacle
-  enemy.positionX -= enemy.speed;
+  enemy.clock += 1;
+  if (enemy.clock % 20) {
+    enemy.positionX -= 1;
+  }
 
   if (enemy.positionX < -enemy.width) {
     enemy.positionX = 128;
@@ -150,7 +189,7 @@ void loop() {
     triggerGameOver();
   }
 
-  delay(30);
+  delay(20);
 }
 
 void triggerGameOver() {
@@ -165,12 +204,13 @@ void triggerGameOver() {
   tft.setCursor(20, 80);
   tft.setTextColor(0xFFE0);
   tft.setTextSize(1);
-  tft.print(F("Press start to try again"));
+  tft.println("Press start to try again");
 }
 
 void resetGame() {
   enemy.positionX = 128;
   enemy.speed = 4;
+  enemy.clock = 0;
   player.positionY = groundPositionY - player.height;
   player.isJumping = false;
   gameOver = false;
