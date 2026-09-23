@@ -29,8 +29,9 @@ const unsigned short enemyColor = MAROON;
 #define CS_PIN   10
 #define RST_PIN  7
 
-// Useful for something?
 #define BREADBOARD_BUTTON_PIN 2
+
+#define BUZZER_PIN 5
 
 // Initialize Adafruit SSD1351 over hardware SPI
 Adafruit_SSD1351 tft = Adafruit_SSD1351(SCREEN_WIDTH, SCREEN_HEIGHT, &SPI, CS_PIN, DC_PIN, RST_PIN);
@@ -70,11 +71,6 @@ void drawHUD() {
     tft.drawFastHLine(0, groundPositionY, SCREEN_WIDTH, WHITE);
     tft.fillRect(0, groundPositionY, SCREEN_WIDTH, 32, BLACK);
   }
-
-  // tft.setCursor(15, 20);
-  // tft.setTextColor(WHITE);
-  // tft.setTextSize(1);
-  // tft.print(enemy.clock);
 }
 
 void setup() {
@@ -88,10 +84,16 @@ void setup() {
 	}
   tft.begin();
   tft.fillScreen(DARKGREEN); 
+
+  pinMode(BUZZER_PIN, OUTPUT);
 }
 
 void clearPlayerPreviousFrame () {
   tft.fillRect(player.positionX, player.positionY, player.width, player.height, backgroundColor);
+}
+
+void clearEnemyPreviousFrame () {
+  tft.fillRoundRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, 4, backgroundColor); 
 }
 
 void loop() {
@@ -133,6 +135,8 @@ void loop() {
   if (aButton == true && !player.isJumping) {
     player.isJumping = true;
     physics.jumpVelocity = -10.0;
+
+    tone(BUZZER_PIN, 100, 100); 
   }
 
   int playerSpeed = 2;
@@ -144,6 +148,11 @@ void loop() {
       playerSpeed = playerSpeed * 3;
     }
     player.positionX = player.positionX + playerSpeed;
+
+    // move off edge of screen, reappear on other edge 
+    if (player.positionX >= SCREEN_WIDTH - player.width) {
+      player.positionX = 0 - player.width;
+    }
   }
   if (padLeft == true) {
     clearPlayerPreviousFrame();
@@ -151,12 +160,17 @@ void loop() {
       playerSpeed = playerSpeed * 3;
     }
     player.positionX = player.positionX - playerSpeed;
+
+    // move off edge of screen, reappear on other edge 
+    if (player.positionX <= 0 - player.width) {
+      player.positionX = SCREEN_WIDTH + player.width;
+    }
   }
 
   // Update Player Position
   if (player.isJumping) {
     // Clear previous player frame
-    tft.fillRect(player.positionX, player.positionY, player.width, player.height, backgroundColor);
+    clearPlayerPreviousFrame();
     player.positionY += physics.jumpVelocity;
     physics.jumpVelocity += physics.gravity;
 
@@ -167,7 +181,7 @@ void loop() {
   }
 
   // Update enemy position
-  tft.fillRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, backgroundColor); // Clear old obstacle
+  clearEnemyPreviousFrame();
   enemy.clock += 1;
   if (enemy.clock % 20) {
     enemy.positionX -= 1;
@@ -181,7 +195,7 @@ void loop() {
   tft.fillRect(player.positionX, player.positionY, player.width, player.height, player.color); 
 
   // Draw enemy 
-  tft.fillRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, enemyColor);
+  tft.fillRoundRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, 4, enemyColor);
 
   // Collision Detection
   if (enemy.positionX < player.positionX + player.width && enemy.positionX + enemy.width > player.positionX &&
@@ -194,6 +208,9 @@ void loop() {
 
 void triggerGameOver() {
   gameOver = true;
+  tone(BUZZER_PIN, 5000, 200);
+  delay(200); 
+  tone(BUZZER_PIN, 500, 200); 
 
   tft.fillScreen(RED);
   tft.setCursor(15, 50);
@@ -201,10 +218,12 @@ void triggerGameOver() {
   tft.setTextSize(2);
   tft.print(F("You Died"));
   
-  tft.setCursor(20, 80);
+  tft.setCursor(15, 80);
   tft.setTextColor(0xFFE0);
   tft.setTextSize(1);
-  tft.println("Press start to try again");
+  tft.println("Press start to ");
+  tft.setCursor(15, 90);
+  tft.println("try again.");
 }
 
 void resetGame() {
@@ -212,6 +231,7 @@ void resetGame() {
   enemy.speed = 4;
   enemy.clock = 0;
   player.positionY = groundPositionY - player.height;
+  player.positionX = 0;
   player.isJumping = false;
   gameOver = false;
   tft.fillScreen(backgroundColor);
