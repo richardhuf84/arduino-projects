@@ -16,7 +16,6 @@ SNESMiniController snes;
 #define RED 0xF800
 #define BLACK 0x0000
 
-
 const unsigned short backgroundColor = DARKGREEN;
 const unsigned short playerColor = DARKCYAN;
 const unsigned short enemyColor = MAROON;
@@ -37,32 +36,34 @@ Adafruit_SSD1351 tft = Adafruit_SSD1351(SCREEN_WIDTH, SCREEN_HEIGHT, &SPI, CS_PI
 // Game variables
 int groundPositionY = 96;
 
-
 struct Player { 
   int positionX;
   int positionY;
   int width;
   int height;
+  uint8_t color;
   bool isJumping;
-} player = {.positionX = 20, .positionY = 96, .width = 20, .height = 50, .isJumping = false };
+} player = {.positionX = 20, .positionY = 96 - 30, .width = 20, .height = 30, .color = playerColor, .isJumping = false };
 
 struct Physics {
   float jumpVelocity;
   float gravity;
 } physics = {.jumpVelocity = 0, .gravity = 1.2 };
 
-
 struct Enemy {
-  int positionX,
-  positionY,
-  width,
-  height,
-  speed;
-} enemy = {.positionX = 128, .positionY = groundPositionY, .width = 20, .height = 20, .speed = 4 };
-
-struct Enemy enemyA = {.positionX = 90, .positionY = groundPositionY };
+  int positionX;
+  int positionY;
+  int width;
+  int height;
+  int speed;
+} enemy = { .positionX = 128, .positionY = groundPositionY -20 - 1, .width = 20, .height = 20, .speed = 4 };
 
 bool gameOver = false;
+
+void drawHUD() {
+  // Ground line
+  tft.drawFastHLine(0, groundPositionY, 128, 0xFFFF); 
+}
 
 void setup() {
   // SNES controller setup
@@ -110,7 +111,6 @@ void loop() {
     return;
   }
 
-
   // Handle Button Jump
   if (aButton == true && !player.isJumping) {
     player.isJumping = true;
@@ -125,37 +125,32 @@ void loop() {
     physics.jumpVelocity += physics.gravity;
 
     if (player.positionY >= 96) {
-      player.positionY = 96;
+      player.positionY = 96 - player.height - 1;
       player.isJumping = false;
     }
   }
 
   // Update enemy position
-  tft.fillRect(enemyA.positionX, enemyA.positionY, enemyA.width, enemyA.height, PINK); // Clear old obstacle
-  enemyA.positionX -= enemyA.speed;
+  tft.fillRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, backgroundColor); // Clear old obstacle
+  enemy.positionX -= enemy.speed;
 
-  if (enemyA.positionX < -enemyA.width)
-    enemyA.positionX = 128;
+  if (enemy.positionX < -enemy.width) {
+    enemy.positionX = 128;
   }
 
   // Draw Player
-  tft.fillRect(player.positionX, player.positionY, player.width, player.height, playerColor); 
+  tft.fillRect(player.positionX, player.positionY, player.width, player.height, player.color); 
 
-  // Draw enemyA 
-  tft.fillRect(enemyA.positionX, enemyA.positionY, enemyA.width, enemyA.height, enemyColor);
+  // Draw enemy 
+  tft.fillRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, enemyColor);
 
   // Collision Detection
-  if (enemyA.positionX < player.positionX + player.width && enemyA.positionX + enemyA.width > player.positionX &&
-      enemyA.positionY < player.positionY + player.width && enemyA.positionY + enemyA.height > player.positionY) {
+  if (enemy.positionX < player.positionX + player.width && enemy.positionX + enemy.width > player.positionX &&
+      enemy.positionY < player.positionY + player.height && enemy.positionY + enemy.height > player.positionY) {
     triggerGameOver();
   }
 
   delay(30);
-}
-
-void drawHUD() {
-  // Ground line
-  tft.drawFastHLine(0, 107, 128, 0xFFFF); 
 }
 
 void triggerGameOver() {
@@ -164,7 +159,7 @@ void triggerGameOver() {
   tft.fillScreen(RED);
   tft.setCursor(15, 50);
   tft.setTextColor(BLACK);
-  tft.setTextSize(1);
+  tft.setTextSize(2);
   tft.print(F("You Died"));
   
   tft.setCursor(20, 80);
@@ -174,11 +169,12 @@ void triggerGameOver() {
 }
 
 void resetGame() {
-  enemyA.positionX = 128;
-  enemyA.speed = 4;
-  player.positionY = 96;
+  enemy.positionX = 128;
+  enemy.speed = 4;
+  player.positionY = groundPositionY - player.height;
   player.isJumping = false;
   gameOver = false;
   tft.fillScreen(backgroundColor);
   drawHUD();
 }
+
