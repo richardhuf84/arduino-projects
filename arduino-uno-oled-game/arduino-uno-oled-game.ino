@@ -9,18 +9,10 @@ SNESMiniController snes;
 #define SCREEN_HEIGHT 128
 
 // Colors
-#define DARKGREEN 0x03E0
-#define PINK 0xF8FF
-#define DARKCYAN 0x03EF
-#define MAROON 0x7800
-#define ORANGE 0xFDA0
-#define RED 0xF800
 #define BLACK 0x0000
 #define WHITE 0xFFFF
 
-const unsigned short backgroundColor = DARKGREEN;
-const unsigned short playerColor = DARKCYAN;
-const unsigned short enemyColor = MAROON;
+const unsigned short playerColor = WHITE;
 
 // Arduino Uno SPI pin definitions
 #define SCLK_PIN 13
@@ -30,8 +22,6 @@ const unsigned short enemyColor = MAROON;
 #define RST_PIN  7
 
 #define BREADBOARD_BUTTON_PIN 2
-
-#define BUZZER_PIN 5
 
 // Initialize Adafruit SSD1351 over hardware SPI
 Adafruit_SSD1351 tft = Adafruit_SSD1351(SCREEN_WIDTH, SCREEN_HEIGHT, &SPI, CS_PIN, DC_PIN, RST_PIN);
@@ -47,7 +37,7 @@ struct Player {
   int height;
   uint8_t color;
   bool isJumping;
-} player = {.positionX = 20, .positionY = 96 - defaultPlayerHeight, .width = 10, .height = defaultPlayerHeight, .color = playerColor, .isJumping = false };
+} player = {.positionX = 20, .positionY = 96 - defaultPlayerHeight, .width = 10, .height = defaultPlayerHeight, .color = WHITE, .isJumping = false };
 
 struct Physics {
   float jumpVelocity;
@@ -69,7 +59,6 @@ void drawHUD() {
   if (!gameOver) {
     // Ground line
     tft.drawFastHLine(0, groundPositionY, SCREEN_WIDTH, WHITE);
-    tft.fillRect(0, groundPositionY, SCREEN_WIDTH, 32, BLACK);
   }
 }
 
@@ -83,17 +72,15 @@ void setup() {
 		delay(1000);
 	}
   tft.begin();
-  tft.fillScreen(DARKGREEN); 
-
-  pinMode(BUZZER_PIN, OUTPUT);
+  tft.fillScreen(BLACK); 
 }
 
 void clearPlayerPreviousFrame () {
-  tft.fillRect(player.positionX, player.positionY, player.width, player.height, backgroundColor);
+  tft.drawRect(player.positionX, player.positionY, player.width, player.height, BLACK);
 }
 
 void clearEnemyPreviousFrame () {
-  tft.fillRoundRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, 4, backgroundColor); 
+  tft.fillRoundRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, 4, BLACK); 
 }
 
 void loop() {
@@ -113,7 +100,6 @@ void loop() {
   
   boolean aButton = snes.buttonA();
   boolean bButton = snes.buttonB();
-
   boolean startButton = snes.buttonStart();
 
   // D-pad
@@ -135,8 +121,6 @@ void loop() {
   if (aButton == true && !player.isJumping) {
     player.isJumping = true;
     physics.jumpVelocity = -10.0;
-
-    tone(BUZZER_PIN, 100, 100); 
   }
 
   int playerSpeed = 2;
@@ -192,10 +176,10 @@ void loop() {
   }
 
   // Draw Player
-  tft.fillRect(player.positionX, player.positionY, player.width, player.height, player.color); 
+  tft.drawRect(player.positionX, player.positionY, player.width, player.height, WHITE); 
 
   // Draw enemy 
-  tft.fillRoundRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, 4, enemyColor);
+  tft.fillRoundRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, 4, WHITE);
 
   // Collision Detection
   if (enemy.positionX < player.positionX + player.width && enemy.positionX + enemy.width > player.positionX &&
@@ -208,18 +192,13 @@ void loop() {
 
 void triggerGameOver() {
   gameOver = true;
-  tone(BUZZER_PIN, 5000, 200);
-  delay(200); 
-  tone(BUZZER_PIN, 500, 200); 
-
-  tft.fillScreen(RED);
+  tft.fillScreen(BLACK);
   tft.setCursor(15, 50);
-  tft.setTextColor(BLACK);
+  tft.setTextColor(WHITE);
   tft.setTextSize(2);
   tft.print(F("You Died"));
   
   tft.setCursor(15, 80);
-  tft.setTextColor(0xFFE0);
   tft.setTextSize(1);
   tft.println("Press start to ");
   tft.setCursor(15, 90);
@@ -233,8 +212,9 @@ void resetGame() {
   player.positionY = groundPositionY - player.height;
   player.positionX = 0;
   player.isJumping = false;
+  tft.fillScreen(BLACK);
   gameOver = false;
-  tft.fillScreen(backgroundColor);
+
   drawHUD();
 }
 
