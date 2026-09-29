@@ -55,6 +55,21 @@ struct Enemy {
 
 bool gameOver = false;
 
+void clearPlayerPreviousFrame () {
+  tft.drawRect(player.positionX, player.positionY, player.width, player.height, BLACK);
+}
+
+void clearEnemyPreviousFrame () {
+  tft.fillRoundRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, 4, BLACK); 
+}
+
+bool isJumpButtonPressed (SNESMiniController snes) {
+  if (snes.buttonA() == true || snes.buttonB() == true) {
+    return true;
+  }
+  return false;
+}
+
 void drawHUD() {
   if (!gameOver) {
     // Ground line
@@ -75,13 +90,6 @@ void setup() {
   tft.fillScreen(BLACK); 
 }
 
-void clearPlayerPreviousFrame () {
-  tft.drawRect(player.positionX, player.positionY, player.width, player.height, BLACK);
-}
-
-void clearEnemyPreviousFrame () {
-  tft.fillRoundRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, 4, BLACK); 
-}
 
 void loop() {
   drawHUD();
@@ -98,8 +106,7 @@ void loop() {
 		snes.connect();
 	}
   
-  boolean aButton = snes.buttonA();
-  boolean bButton = snes.buttonB();
+  boolean yButton = snes.buttonY();
   boolean startButton = snes.buttonStart();
 
   // D-pad
@@ -117,8 +124,8 @@ void loop() {
     return;
   }
 
-  // Handle Button Jump
-  if (aButton == true && !player.isJumping) {
+  // Handle Jump
+  if (isJumpButtonPressed(snes)) {
     player.isJumping = true;
     physics.jumpVelocity = -10.0;
   }
@@ -128,7 +135,7 @@ void loop() {
   // Handle movement
   if (padRight == true) {
     clearPlayerPreviousFrame();
-    if (bButton == true) {
+    if (yButton == true) {
       playerSpeed = playerSpeed * 3;
     }
     player.positionX = player.positionX + playerSpeed;
@@ -140,7 +147,7 @@ void loop() {
   }
   if (padLeft == true) {
     clearPlayerPreviousFrame();
-    if (bButton == true) {
+    if (yButton == true) {
       playerSpeed = playerSpeed * 3;
     }
     player.positionX = player.positionX - playerSpeed;
