@@ -10,10 +10,11 @@ SNESMiniController snes;
 
 // Colors
 #define BLACK 0x0000
+#define GREEN 0x07E0
+#define RED 0xF800
 #define WHITE 0xFFFF
-#define RED 0xF000
-
-const unsigned short playerColor = WHITE;
+#define MAGENTA 0xF81F
+#define YELLOW 0xFFE0
 
 // Arduino Uno SPI pin definitions
 #define SCLK_PIN 13
@@ -65,8 +66,8 @@ void clearEnemyPreviousFrame () {
   tft.fillRoundRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, 4, BLACK); 
 }
 
-bool isJumpButtonPressed (SNESMiniController snes) {
-  if (snes.buttonA() == true || snes.buttonB() == true) {
+bool isJumpButtonPressed (bool isJumpButtonPressed) {
+  if (isJumpButtonPressed == true) {
     return true;
   }
   return false;
@@ -137,7 +138,7 @@ void loop() {
   }
 
   // Handle Jump
-  if (isJumpButtonPressed(snes)) {
+  if (isJumpButtonPressed(jumpButton == true) && !player.isJumping) {
     player.isJumping = true;
     physics.jumpVelocity = -10.0;
   }
@@ -206,7 +207,7 @@ void loop() {
   }
 
   // Draw Player
-  tft.drawRect(player.positionX, player.positionY, player.width, player.height, WHITE); 
+  tft.drawRect(player.positionX, player.positionY, player.width, player.height, player.color); 
 
   // Draw enemy 
   tft.fillRoundRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, 4, WHITE);
