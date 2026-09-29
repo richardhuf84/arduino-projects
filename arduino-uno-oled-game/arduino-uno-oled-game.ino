@@ -11,6 +11,7 @@ SNESMiniController snes;
 // Colors
 #define BLACK 0x0000
 #define WHITE 0xFFFF
+#define RED 0xF000
 
 const unsigned short playerColor = WHITE;
 
@@ -22,6 +23,7 @@ const unsigned short playerColor = WHITE;
 #define RST_PIN  7
 
 #define BREADBOARD_BUTTON_PIN 2
+#define LED_PIN 4
 
 // Initialize Adafruit SSD1351 over hardware SPI
 Adafruit_SSD1351 tft = Adafruit_SSD1351(SCREEN_WIDTH, SCREEN_HEIGHT, &SPI, CS_PIN, DC_PIN, RST_PIN);
@@ -55,6 +57,21 @@ struct Enemy {
 
 bool gameOver = false;
 
+void clearPlayerPreviousFrame () {
+  tft.drawRect(player.positionX, player.positionY, player.width, player.height, BLACK);
+}
+
+void clearEnemyPreviousFrame () {
+  tft.fillRoundRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, 4, BLACK); 
+}
+
+bool isJumpButtonPressed (SNESMiniController snes) {
+  if (snes.buttonA() == true || snes.buttonB() == true) {
+    return true;
+  }
+  return false;
+}
+
 void drawHUD() {
   if (!gameOver) {
     // Ground line
@@ -67,6 +84,8 @@ void setup() {
   Serial.begin(115200);
 	snes.begin();
 
+  pinMode(LED_PIN, OUTPUT);
+
 	while (!snes.connect()) {
 		Serial.println("Classic Controller not detected!");
 		delay(1000);
@@ -75,13 +94,6 @@ void setup() {
   tft.fillScreen(BLACK); 
 }
 
-void clearPlayerPreviousFrame () {
-  tft.drawRect(player.positionX, player.positionY, player.width, player.height, BLACK);
-}
-
-void clearEnemyPreviousFrame () {
-  tft.fillRoundRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, 4, BLACK); 
-}
 
 void loop() {
   drawHUD();
@@ -98,9 +110,16 @@ void loop() {
 		snes.connect();
 	}
   
+  // input buttons
+  boolean yButton = snes.buttonY();
+  boolean xButton = snes.buttonX();
   boolean aButton = snes.buttonA();
   boolean bButton = snes.buttonB();
   boolean startButton = snes.buttonStart();
+
+  // Named button constants
+  boolean actionButton = xButton;
+  boolean jumpButton = aButton || bButton; // TODO use this
 
   // D-pad
   boolean padUp = snes.dpadUp();
@@ -117,8 +136,8 @@ void loop() {
     return;
   }
 
-  // Handle Button Jump
-  if (aButton == true && !player.isJumping) {
+  // Handle Jump
+  if (isJumpButtonPressed(snes)) {
     player.isJumping = true;
     physics.jumpVelocity = -10.0;
   }
@@ -128,7 +147,7 @@ void loop() {
   // Handle movement
   if (padRight == true) {
     clearPlayerPreviousFrame();
-    if (bButton == true) {
+    if (yButton == true) {
       playerSpeed = playerSpeed * 3;
     }
     player.positionX = player.positionX + playerSpeed;
@@ -140,7 +159,7 @@ void loop() {
   }
   if (padLeft == true) {
     clearPlayerPreviousFrame();
-    if (bButton == true) {
+    if (yButton == true) {
       playerSpeed = playerSpeed * 3;
     }
     player.positionX = player.positionX - playerSpeed;
@@ -150,6 +169,17 @@ void loop() {
       player.positionX = SCREEN_WIDTH + player.width;
     }
   }
+
+  // Handle action button
+  if (actionButton == true) {
+    digitalWrite(LED_PIN, HIGH);
+    player.color = RED;
+  }
+  else {
+    digitalWrite(LED_PIN, LOW);
+    player.color = WHITE;
+  }
+
 
   // Update Player Position
   if (player.isJumping) {
