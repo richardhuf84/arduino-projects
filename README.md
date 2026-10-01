@@ -35,8 +35,8 @@ This is really just a fun little excercise, to learn more about building circuit
 
 - [ ] Add collectibles (raspberries). Collecting 3 raspberries turns on the red LED. Something cool happens. Maybe super speed or a brief time of being invincible (like a star in Mario).
 - [ ] There's a bug where it draws gradient banding on the screen. Look into https://github.com/olikraus/u8g2 for better memory management.
-- [ ] Bug 🐞 I've mapped both `a` and `b` to jump. Feels intuitive for a platformer. However I need to refactor, as it registers pressing __either__ as jumping. Introduced a bug where you can jump forever.
 - [ ] Look at setting up a camera / viewport, to allow for movement a virtual 'camera' across level assets, and tracking the player. This [Lazy Foo' Productions scrolling tutorial](https://lazyfoo.net/SDL_tutorials/lesson21/index.php) could be useful.
+- [x] Bug 🐞 I've mapped both `a` and `b` to jump. Feels intuitive for a platformer. However I need to refactor, as it registers pressing __either__ as jumping. Introduced a bug where you can jump forever.
 - [x] Setup basic player. Includes movement and jump support, as well as an 'action' button which turns on an LED for now.
 - [x] Setup basic enemy. Moves, and kills the player on contact.
 - [x] Setup game over and retry screen.
