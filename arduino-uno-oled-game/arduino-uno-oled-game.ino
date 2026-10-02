@@ -93,7 +93,7 @@ struct Physics {
 
 
 void clearPlayerPreviousFrame () {
-  tft.drawRect(player.positionX, player.positionY, player.width, player.height, screenBgColor);
+  tft.drawRect(player.positionX, player.positionY, player.width, player.height, BLACK);
 }
 
 void clearEnemyPreviousFrame () {

@@ -4,6 +4,9 @@ This is the repository for a small project to make a 2d platformer and run it on
 
 ## Overview
 
+<div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1232327414?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;muted=1" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="IMG_0675"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
+<blockquote>A short demo, 02/10/'26</blockquote>
+
 ### Hardware bill of materials
 
 - Arduino Uno R4 Minima
