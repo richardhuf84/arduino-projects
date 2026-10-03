@@ -18,8 +18,6 @@ SNESMiniController snes;
 #define ORANGE 0xF360
 
 // Arduino Uno SPI pin definitions
-#define SCLK_PIN 13
-#define MOSI_PIN 11 // SDA
 #define DC_PIN   8
 #define CS_PIN   10
 #define RST_PIN  7
