@@ -51,7 +51,7 @@ struct Player {
   bool isAttacking;
 } player = { 
   .positionX = 20, 
-  .positionY = 96 - defaultPlayerHeight, 
+  .positionY = groundPositionY - defaultPlayerHeight, 
   .width = 10, 
   .height = defaultPlayerHeight, 
   .color = playerColor, 
@@ -239,8 +239,8 @@ void loop() {
     player.positionY += physics.jumpVelocity;
     physics.jumpVelocity += physics.gravity;
 
-    if (player.positionY >= 96) {
-      player.positionY = 96 - player.height - 1;
+    if (player.positionY >= groundPositionY) {
+      player.positionY = groundPositionY - player.height - 1;
       player.isJumping = false;
     }
   }
