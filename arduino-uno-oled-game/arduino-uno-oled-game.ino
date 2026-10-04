@@ -93,11 +93,11 @@ struct Physics {
 
 
 void clearPlayerPreviousFrame () {
-  tft.drawRect(player.positionX, player.positionY, player.width, player.height, BLACK);
+  tft.fillRect(player.positionX, player.positionY, player.width, player.height, screenBgColor);
 }
 
 void clearEnemyPreviousFrame () {
-  tft.drawRoundRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, enemy.roundness, screenBgColor); 
+  tft.fillRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, screenBgColor);
 }
 
 bool isJumpButtonPressed (bool isJumpButtonPressed) {
@@ -301,4 +301,3 @@ void resetGame() {
 
   drawHUD();
 }
-
