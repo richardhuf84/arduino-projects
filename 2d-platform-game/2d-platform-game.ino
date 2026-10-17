@@ -23,7 +23,8 @@ SNESMiniController snes;
 #define RST_PIN  7
 
 #define BREADBOARD_BUTTON_PIN 2
-#define LED_PIN 4
+#define LED_PIN_1 4
+#define LED_PIN_2 9
 
 const unsigned short playerColor = WHITE;
 const unsigned short enemyColor = GREEN;
@@ -31,8 +32,6 @@ const int defaultRoundness = 4;
 const uint16_t screenBgColor = BLACK;
 const uint16_t textDefaultColor = RED;
 const int screenRightEdgePositionX = SCREEN_WIDTH;
-
-// TODO make an array of colors for enemy, and randomly assign enemy color.
 
 // Initialize Adafruit SSD1351 over hardware SPI
 Adafruit_SSD1351 tft = Adafruit_SSD1351(SCREEN_WIDTH, SCREEN_HEIGHT, &SPI, CS_PIN, DC_PIN, RST_PIN);
@@ -93,11 +92,11 @@ struct Physics {
 };
 
 void clearPlayerPreviousFrame () {
-  tft.drawRect(player.positionX, player.positionY, player.width, player.height, BLACK);
+  tft.fillRect(player.positionX, player.positionY, player.width, player.height, BLACK);
 }
 
 void clearEnemyPreviousFrame () {
-  tft.drawRoundRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, enemy.roundness, screenBgColor); 
+  tft.fillRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, screenBgColor); 
 }
 
 bool isJumpButtonPressed (bool isJumpButtonPressed) {
@@ -133,7 +132,8 @@ void setup() {
   Serial.begin(115200);
 	snes.begin();
 
-  pinMode(LED_PIN, OUTPUT);
+  pinMode(LED_PIN_1, OUTPUT);
+  pinMode(LED_PIN_2, OUTPUT);
 
 	while (!snes.connect()) {
 		Serial.println("Classic Controller not detected!");
@@ -223,12 +223,12 @@ void loop() {
 
   // Handle action button
   if (actionButton == true) {
-    digitalWrite(LED_PIN, HIGH);
+    digitalWrite(LED_PIN_1, HIGH);
     player.color = RED;
     player.isAttacking = true;
   }
   else {
-    digitalWrite(LED_PIN, LOW);
+    digitalWrite(LED_PIN_1, LOW);
     player.color = WHITE;
     player.isAttacking = false;
   }
@@ -259,12 +259,7 @@ void loop() {
   }
 
   // Draw Player
-  if (player.isAttacking == true) {
-    tft.drawRect(player.positionX, player.positionY, player.width, player.height, player.color); 
-  }
-  else {
-    tft.drawRect(player.positionX, player.positionY, player.width, player.height, player.color); 
-  }
+  tft.drawRect(player.positionX, player.positionY, player.width, player.height, player.color); 
 
   // Draw enemy 
   tft.fillRoundRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, enemy.roundness, enemy.color);
@@ -284,9 +279,10 @@ void triggerGameOver() {
   
   tft.setCursor(15, 80);
   tft.setTextSize(1);
-  tft.println("Press start to ");
+  tft.println(F("Press start to "));
   tft.setCursor(15, 90);
-  tft.println("try again.");
+  tft.println(F("try again."));
+  digitalWrite(LED_PIN_2, HIGH);
 }
 
 void resetGame() {
@@ -298,6 +294,7 @@ void resetGame() {
   player.isJumping = false;
   tft.fillScreen(screenBgColor);
   gameOver = false;
+  digitalWrite(LED_PIN_2, LOW);
 
   drawHUD();
 }
