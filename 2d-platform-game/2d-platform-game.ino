@@ -23,8 +23,6 @@ SNESMiniController snes;
 #define RST_PIN  7
 
 #define BREADBOARD_BUTTON_PIN 2
-#define LED_PIN_1 4
-#define LED_PIN_2 9
 
 const unsigned short playerColor = WHITE;
 const unsigned short enemyColor = GREEN;
@@ -132,9 +130,6 @@ void setup() {
   Serial.begin(115200);
 	snes.begin();
 
-  pinMode(LED_PIN_1, OUTPUT);
-  pinMode(LED_PIN_2, OUTPUT);
-
 	while (!snes.connect()) {
 		Serial.println("Classic Controller not detected!");
 		delay(1000);
@@ -223,12 +218,10 @@ void loop() {
 
   // Handle action button
   if (actionButton == true) {
-    digitalWrite(LED_PIN_1, HIGH);
     player.color = RED;
     player.isAttacking = true;
   }
   else {
-    digitalWrite(LED_PIN_1, LOW);
     player.color = WHITE;
     player.isAttacking = false;
   }
@@ -282,7 +275,6 @@ void triggerGameOver() {
   tft.println(F("Press start to "));
   tft.setCursor(15, 90);
   tft.println(F("try again."));
-  digitalWrite(LED_PIN_2, HIGH);
 }
 
 void resetGame() {
@@ -294,7 +286,6 @@ void resetGame() {
   player.isJumping = false;
   tft.fillScreen(screenBgColor);
   gameOver = false;
-  digitalWrite(LED_PIN_2, LOW);
 
   drawHUD();
 }
