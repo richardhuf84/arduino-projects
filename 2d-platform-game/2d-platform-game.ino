@@ -91,19 +91,32 @@ struct Physics {
   .velocityModifier = -12.0 
 };
 
+struct PlatformLine {
+  uint16_t x;
+  uint16_t y;
+  uint16_t width;
+  uint16_t color;
+};
+
+struct PlatformBlock {
+  int16_t x;
+  int16_t y;
+  int16_t width;
+  int16_t height;
+  uint16_t color;
+};
+
+struct Platform {
+  struct PlatformLine line;
+  struct PlatformBlock block;
+};
+
 void clearPlayerPreviousFrame () {
   tft.fillRect(player.positionX, player.positionY, player.width, player.height, BLACK);
 }
 
 void clearEnemyPreviousFrame () {
   tft.fillRect(enemy.positionX, enemy.positionY, enemy.width, enemy.height, screenBgColor); 
-}
-
-bool isJumpButtonPressed (bool isJumpButtonPressed) {
-  if (isJumpButtonPressed == true) {
-    return true;
-  }
-  return false;
 }
 
 void isPlayerCollidingWithEnemy () {
@@ -117,6 +130,19 @@ void isPlayerCollidingWithEnemy () {
     }
 
     triggerGameOver();
+  }
+}
+
+void isPlayerCollidingWithPlatform (Player player, Platform platform) {
+  int playerBottomY = player.positionY + player.height;
+  int playerIsColliding = playerBottomY < platform.block.y && 
+    playerBottomY > platform.block.y + platform.block.height &&
+    player.positionX > platform.block.x &&
+    player.positionX < platform.block.x + platform.block.width;
+  
+  if (playerIsColliding) {
+      player.positionY = platform.line.y - 1;
+      player.isJumping = false;
   }
 }
 
@@ -178,6 +204,22 @@ void loop() {
   boolean padLeft = snes.dpadLeft();
   boolean padRight = snes.dpadRight();
 
+  Platform platformA = { 
+    line: { 
+      x: 32, 
+      y: 40, 
+      width: 40, 
+      color: WHITE 
+    }, 
+    block: {
+      x: 32,
+      y: 35,
+      width: 40,
+      height: 5,
+      color: RED
+    }
+  };
+
   // game loop
   if (gameOver) {
     if (startButton == true) {
@@ -188,7 +230,7 @@ void loop() {
   }
 
   // Handle Jump
-  if (isJumpButtonPressed(jumpButton == true) && !player.isJumping) {
+  if (jumpButton == true && !player.isJumping) {
     player.isJumping = true;
     physics.jumpVelocity = physics.velocityModifier;
   }
@@ -233,13 +275,30 @@ void loop() {
     player.isAttacking = false;
   }
 
-
   // Update Player Position
   if (player.isJumping) {
     // Clear previous player frame
     clearPlayerPreviousFrame();
     player.positionY += physics.jumpVelocity;
     physics.jumpVelocity += physics.gravity;
+
+     // isPlayerCollidingWithPlatform(player, platformA);
+    int playerBottomY = player.positionY + player.height;
+
+    int platformTopEdge = platformA.block.y;
+    int platformRightEdge = platformA.block.x + platformA.block.width;
+    int platformBottomEdge = platformA.block.y + platformA.block.height;
+    int platformLeftEdge = platformA.block.x;
+
+    int isPlayerColliding = playerBottomY < platformTopEdge && 
+    playerBottomY > platformBottomEdge &&
+    player.positionX > platformLeftEdge &&
+    player.positionX < platformRightEdge;
+  
+    if (isPlayerColliding) {
+        player.positionY = platformBottomEdge;
+        player.isJumping = false;
+    }
 
     if (player.positionY >= groundY) {
       player.positionY = groundedObjectY - player.height;
@@ -266,6 +325,11 @@ void loop() {
 
   // Collision Detection
   isPlayerCollidingWithEnemy();
+  
+  // draw a line - fake platform
+  // tft.drawFastHLine(32, 32, 40, WHITE);
+  tft.drawFastHLine(platformA.line.x, platformA.line.y, platformA.line.width, platformA.line.color);
+  tft.drawRect(platformA.block.x, platformA.block.y, platformA.block.width, platformA.block.height, platformA.block.color);
 
   delay(20);
 }
@@ -275,6 +339,7 @@ void triggerGameOver() {
   tft.fillScreen(screenBgColor);
   tft.setCursor(15, 50);
   tft.setTextColor(textDefaultColor);
+  tft.setTextSize(2);
   tft.print(F("You Died"));
   
   tft.setCursor(15, 80);
